@@ -81,10 +81,11 @@ function actualizarPlaceholders() {
     document.getElementById('fechaInicio').value = '';
 
     // Días festivos placeholder = primer día del mes, día actual, último día del mes
-    const primerDia = '01'+mes;
+    const primerDia = `01/${mes}/${año}`;
     const ultimoDiaNum = new Date(año, ahora.getMonth()+1, 0).getDate().toString().padStart(2,'0');
-    const ultimoDia = ultimoDiaNum+mes;
-    document.getElementById('diasFestivos').placeholder = `${primerDia} ${dia}${mes}${año} ${ultimoDia}${mes}${año}`;
+    const ultimoDia = `${ultimoDiaNum}/${mes}/${año}`;
+
+    document.getElementById('diasFestivos').placeholder = `${primerDia} ${dia}/${mes}/${año} ${ultimoDia}`;
 }
 actualizarPlaceholders();
 
