@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETAPAS DE PROCESOS DE COMPRAS 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Roboto', sans-serif; background: linear-gradient(120deg, #f0f4f8, #e0f7fa); margin: 0; padding: 0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+    .container { background: white; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); padding: 40px; margin-top: 50px; width: 95%; max-width: 1000px; }
+    h1 { text-align: center; color: #00796b; margin-bottom: 20px; font-size:1.2em;}
+    label { font-weight: 700; display: block; margin-top: 15px; }
+    input, textarea, select { padding: 10px; margin-top: 5px; width: 100%; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
+    button { padding: 12px 20px; background-color: #00796b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 15px; margin-right: 10px; }
+    button:hover { background-color: #004d40; }
+    table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.95em; }
+    th, td { border: 1px solid #ccc; padding: 12px; text-align: center; }
+    th { background-color: #00796b; color: white; font-weight: 700; }
+    .reloj { text-align: center; font-size: 1.2em; margin-top: 10px; font-weight: 700; color: #004d40; }
+    .nota { font-size: 0.9em; color: #333; margin-top: 25px; font-style: italic; text-align: justify; }
+    .firma { font-size: 0.8em; color: #555; text-align: right; margin-top: 15px; font-style: italic; }
+    .logo { width: 100%; height: auto; display: block; margin-bottom: 15px; }
+</style>
+</head>
+<body>
+<div class="container" id="mainView">
+    <img src="C:\Users\Carlos Baltodano\Desktop\LOGO MINSA.jpg" alt="MINISTERIO DE SALUD - MINSA" class="logo">
+    <h1>ETAPAS DE PROCESO ADMINISTRATIVO DEL CENTRO DE SALUD JULIO BUITRAGO URROZ</h1>
+    <div class="reloj" id="reloj"></div>
+
+    <label>Fecha de inicio (DD/MM/AAAA):</label>
+    <input type="text" id="fechaInicio" placeholder="">
+    
+    <label>Días festivos o libres (opcional):</label>
+    <textarea id="diasFestivos" placeholder=""></textarea>
+
+    <label>Modo de conteo:</label>
+    <select id="modoDias">
+        <option value="habil">Solo días hábiles</option>
+        <option value="todos">Todos los días</option>
+    </select>
+
+    <button onclick="generarCronograma()">Generar Cronograma</button>
+    <button onclick="limpiarTabla()">Limpiar</button>
+
+    <table id="tablaCronograma" style="display:none;">
+        <thead>
+            <tr>
+                <th>DESCRIPCIÓN</th>
+                <th>REGLA SEGÚN LA LEY 1238</th>
+                <th>INICIA</th>
+                <th>HASTA</th>
+                <th>DÍAS OMITIDOS</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <p class="nota">Nota: Según la LEY 1238 los plazos deben contarse en días hábiles (lunes a viernes), excluyendo fines de semana y feriados especificados.</p>
+    <p class="firma">Hecho por Carlos Baltodano - Todos los derechos reservados</p>
+</div>
+
+<script>
+// --- RELOJ ---
+function actualizarReloj() {
+    const ahora = new Date();
+    document.getElementById('reloj').textContent = 'Fecha y hora actual: ' + ahora.toLocaleDateString('es-ES') + ' ' + ahora.toLocaleTimeString('es-ES');
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+// --- PLACEHOLDERS AUTOMÁTICOS ---
+function actualizarPlaceholders() {
+    const ahora = new Date();
+    const dia = ahora.getDate().toString().padStart(2,'0');
+    const mes = (ahora.getMonth()+1).toString().padStart(2,'0');
+    const año = ahora.getFullYear();
+
+    // Fecha de inicio placeholder = fecha actual
+    document.getElementById('fechaInicio').placeholder = `${dia}/${mes}/${año}`;
+    document.getElementById('fechaInicio').value = '';
+
+    // Días festivos placeholder = primer día del mes, día actual, último día del mes
+    const primerDia = '01'+mes;
+    const ultimoDiaNum = new Date(año, ahora.getMonth()+1, 0).getDate().toString().padStart(2,'0');
+    const ultimoDia = ultimoDiaNum+mes;
+    document.getElementById('diasFestivos').placeholder = `${primerDia} ${dia}${mes}${año} ${ultimoDia}${mes}${año}`;
+}
+actualizarPlaceholders();
+
+// --- PARSEAR FECHAS FLEXIBLES ---
+function parsearFechaFlexible(str) {
+    str = str.replace(/\D/g,''); 
+    const añoActual = new Date().getFullYear();
+    if(str.length===4){ // DDMM
+        return new Date(añoActual, parseInt(str.slice(2,4))-1, parseInt(str.slice(0,2)));
+    } else if(str.length===6){ // DDMMYY
+        let yy = parseInt(str.slice(4,6));
+        let yyyy = yy<50 ? 2000+yy : 1900+yy;
+        return new Date(yyyy, parseInt(str.slice(2,4))-1, parseInt(str.slice(0,2)));
+    } else if(str.length===8){ // DDMMYYYY
+        return new Date(parseInt(str.slice(4,8)), parseInt(str.slice(2,4))-1, parseInt(str.slice(0,2)));
+    } else {
+        return null;
+    }
+}
+
+// --- FORMATEAR ---
+function formatearFecha(fecha){
+    return fecha.getDate().toString().padStart(2,'0') + '/' +
+           (fecha.getMonth()+1).toString().padStart(2,'0') + '/' +
+           fecha.getFullYear();
+}
+
+// --- CRONOGRAMA ---
+let etapas=[], festivos=[], fechaInicioGlobal=null, modoGlobal='habil';
+function sumarDias(fecha, dias, festivos, modo){
+    let count=0, omitidos=0;
+    while(count<dias){
+        fecha.setDate(fecha.getDate()+1);
+        let esFestivo = festivos.some(f=>f.getTime()===fecha.getTime());
+        let esFinSemana = fecha.getDay()===0 || fecha.getDay()===6;
+        if(modo==='habil'){
+            if(!esFestivo && !esFinSemana) count++;
+            else omitidos++;
+        } else {
+            if(!esFestivo) count++;
+            else omitidos++;
+        }
+    }
+    return {fecha:new Date(fecha), omitidos};
+}
+
+// --- GENERAR CRONOGRAMA ---
+function generarCronograma(){
+    let fechaInput=document.getElementById('fechaInicio');
+    let fechaStr = fechaInput.value.trim();
+    if(!fechaStr) fechaStr = fechaInput.placeholder.replace(/\D/g,''); 
+    let fechaInicio = parsearFechaFlexible(fechaStr);
+    if(!fechaInicio || isNaN(fechaInicio.getTime())){
+        alert('Formato incorrecto. Ejemplo: DDMM o DDMMYYYY');
+        return;
+    }
+    fechaInput.value = formatearFecha(fechaInicio);
+
+    festivos = document.getElementById('diasFestivos').value.split(/[\s,]+/).map(f=>parsearFechaFlexible(f)).filter(d=>d && !isNaN(d.getTime()));
+    modoGlobal = document.getElementById('modoDias').value;
+    etapas = [];
+    let tmp = new Date(fechaInicio);
+    fechaInicioGlobal = new Date(tmp);
+
+    let etapa1 = {nombre:'RESOLUCION DE INICIO Y INVITACIÓN DE OFERTAS', regla:'Inicio el primer día', dias:1, fechaInicio:new Date(tmp), fechaFin:new Date(tmp), omitidos:0};
+    etapas.push(etapa1);
+
+    let res = sumarDias(new Date(tmp),3,festivos,modoGlobal);
+    etapas.push({nombre:'PRESENTACION DE OFERTAS', regla:'3 días hábiles', dias:3, fechaInicio:new Date(tmp), fechaFin:res.fecha, omitidos:res.omitidos});
+
+    let res2 = sumarDias(new Date(res.fecha),1,festivos,modoGlobal);
+    etapas.push({nombre:'APERTURA DE OFERTAS', regla:'1 día', dias:1, fechaInicio:res.fecha, fechaFin:res2.fecha, omitidos:res2.omitidos});
+
+    let res3 = sumarDias(new Date(res2.fecha),20,festivos,modoGlobal);
+    etapas.push({nombre:'EVALUACIÓN DE OFERTAS', regla:'20 días hábiles', dias:20, fechaInicio:res2.fecha, fechaFin:res3.fecha, omitidos:res3.omitidos});
+
+    let res4 = sumarDias(new Date(res3.fecha),1,festivos,modoGlobal);
+    etapas.push({nombre:'ADJUDICACIÓN DE PROVEEDOR', regla:'1 día hábil', dias:1, fechaInicio:res3.fecha, fechaFin:res4.fecha, omitidos:res4.omitidos});
+
+    let res5 = sumarDias(new Date(res4.fecha),5,festivos,modoGlobal);
+    etapas.push({nombre:'CONTRATO A PROVEEDOR', regla:'5 días hábiles', dias:5, fechaInicio:res4.fecha, fechaFin:res5.fecha, omitidos:res5.omitidos});
+
+    let tbody = document.querySelector('#tablaCronograma tbody');
+    tbody.innerHTML='';
+    etapas.forEach(etapa=>{
+        let tr=document.createElement('tr');
+        tr.innerHTML=`<td>${etapa.nombre}</td><td>${etapa.regla}</td><td>${formatearFecha(etapa.fechaInicio)}</td><td>${formatearFecha(etapa.fechaFin)}</td><td>${etapa.omitidos}</td>`;
+        tbody.appendChild(tr);
+    });
+    document.getElementById('tablaCronograma').style.display='table';
+}
+
+// --- LIMPIAR ---
+function limpiarTabla(){
+    document.querySelector('#tablaCronograma tbody').innerHTML='';
+    document.getElementById('tablaCronograma').style.display='none';
+    document.getElementById('fechaInicio').value='';
+    document.getElementById('diasFestivos').value='';
+    etapas=[];
+}
+
+// --- TECLAS ---
+document.addEventListener('keydown', function(e){
+    if(e.key==='Delete' || e.key==='Supr'){
+        limpiarTabla();
+    }
+});
+
+document.getElementById('fechaInicio').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+        e.preventDefault();
+        generarCronograma();
+    }
+});
+</script>
+</body>
+</html>
