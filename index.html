@@ -76,11 +76,9 @@ function actualizarPlaceholders() {
     const mes = (ahora.getMonth()+1).toString().padStart(2,'0');
     const año = ahora.getFullYear();
 
-    // Fecha de inicio placeholder = fecha actual
     document.getElementById('fechaInicio').placeholder = `${dia}/${mes}/${año}`;
     document.getElementById('fechaInicio').value = '';
 
-    // Días festivos placeholder = primer día del mes, día actual, último día del mes
     const primerDia = `01/${mes}/${año}`;
     const ultimoDiaNum = new Date(año, ahora.getMonth()+1, 0).getDate().toString().padStart(2,'0');
     const ultimoDia = `${ultimoDiaNum}/${mes}/${año}`;
@@ -93,13 +91,13 @@ actualizarPlaceholders();
 function parsearFechaFlexible(str) {
     str = str.replace(/\D/g,''); 
     const añoActual = new Date().getFullYear();
-    if(str.length===4){ // DDMM
+    if(str.length===4){
         return new Date(añoActual, parseInt(str.slice(2,4))-1, parseInt(str.slice(0,2)));
-    } else if(str.length===6){ // DDMMYY
+    } else if(str.length===6){
         let yy = parseInt(str.slice(4,6));
         let yyyy = yy<50 ? 2000+yy : 1900+yy;
         return new Date(yyyy, parseInt(str.slice(2,4))-1, parseInt(str.slice(0,2)));
-    } else if(str.length===8){ // DDMMYYYY
+    } else if(str.length===8){
         return new Date(parseInt(str.slice(4,8)), parseInt(str.slice(2,4))-1, parseInt(str.slice(0,2)));
     } else {
         return null;
@@ -172,7 +170,10 @@ function generarCronograma(){
     tbody.innerHTML='';
     etapas.forEach(etapa=>{
         let tr=document.createElement('tr');
-        tr.innerHTML=`<td>${etapa.nombre}</td><td>${etapa.regla}</td><td>${formatearFecha(etapa.fechaInicio)}</td><td>${formatearFecha(etapa.fechaFin)}</td><td>${etapa.omitidos}</td>`;
+        tr.innerHTML=`<td>${etapa.nombre}</td><td>${etapa.regla}</td>
+        <td class="copiable">${formatearFecha(etapa.fechaInicio)}</td>
+        <td class="copiable">${formatearFecha(etapa.fechaFin)}</td>
+        <td>${etapa.omitidos}</td>`;
         tbody.appendChild(tr);
     });
     document.getElementById('tablaCronograma').style.display='table';
@@ -198,6 +199,16 @@ document.getElementById('fechaInicio').addEventListener('keydown', function(e){
     if(e.key === 'Enter'){
         e.preventDefault();
         generarCronograma();
+    }
+});
+
+// --- COPIAR FECHA AL CLIC ---
+document.addEventListener('click', function(e){
+    if(e.target.classList.contains('copiable')){
+        const texto = e.target.textContent;
+        navigator.clipboard.writeText(texto).catch(err=>{
+            console.error('Error al copiar: ', err);
+        });
     }
 });
 </script>
