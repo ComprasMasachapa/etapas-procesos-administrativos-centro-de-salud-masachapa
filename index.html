@@ -211,6 +211,21 @@ document.addEventListener('click', function(e){
             console.error('Error al copiar: ', err);
         });
     }
+// --- FOCO AUTOMATICO ---
+window.addEventListener('load', () => {
+    document.getElementById('fechaInicio').focus();
+});
+
+// --- Ajuste después de limpiar ---
+function limpiarTabla(){
+    document.querySelector('#tablaCronograma tbody').innerHTML='';
+    document.getElementById('tablaCronograma').style.display='none';
+    document.getElementById('fechaInicio').value='';
+    document.getElementById('diasFestivos').value='';
+    etapas=[];
+    document.getElementById('fechaInicio').focus(); // vuelve a enfocar automáticamente
+}
+    
 });
 </script>
 </body>
