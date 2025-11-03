@@ -22,6 +22,24 @@
     .nota { font-size: 0.9em; color: #333; margin-top: 25px; font-style: italic; text-align: justify; }
     .firma { font-size: 0.8em; color: #555; text-align: right; margin-top: 15px; font-style: italic; }
     .logo { width: 100%; height: auto; display: block; margin-bottom: 15px; }
+
+    /* --- ALERTA FLOTANTE --- */
+    .alerta-flotante {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #d32f2f; /* Rojo institucional */
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        text-align: center;
+    }
 </style>
 </head>
 <body>
@@ -113,6 +131,19 @@ function formatearFecha(fecha){
            fecha.getFullYear();
 }
 
+// --- ALERTA FLOTANTE ---
+function mostrarAlerta(mensaje) {
+    const alerta = document.createElement('div');
+    alerta.className = 'alerta-flotante';
+    alerta.innerHTML = mensaje;
+    document.body.appendChild(alerta);
+    setTimeout(() => alerta.style.opacity = 1, 50);
+    setTimeout(() => {
+        alerta.style.opacity = 0;
+        setTimeout(() => alerta.remove(), 500);
+    }, 3000);
+}
+
 // --- CRONOGRAMA ---
 let etapas=[], festivos=[], fechaInicioGlobal=null, modoGlobal='habil';
 function sumarDias(fecha, dias, festivos, modo){
@@ -142,6 +173,13 @@ function generarCronograma(){
         alert('Formato incorrecto. Ejemplo: DDMM o DDMMYYYY');
         return;
     }
+
+    // 🚫 Validar si el día de inicio es fin de semana
+    if (fechaInicio.getDay() === 6 || fechaInicio.getDay() === 0) {
+        mostrarAlerta('🚫 <b>No puede iniciar un proceso en fin de semana.</b><br>Los procesos administrativos se programan únicamente en días hábiles para garantizar la correcta gestión y seguimiento.');
+        return;
+    }
+
     fechaInput.value = formatearFecha(fechaInicio);
 
     festivos = document.getElementById('diasFestivos').value.split(/[\s,]+/).map(f=>parsearFechaFlexible(f)).filter(d=>d && !isNaN(d.getTime()));
@@ -188,6 +226,7 @@ function limpiarTabla(){
     document.getElementById('fechaInicio').value='';
     document.getElementById('diasFestivos').value='';
     etapas=[];
+    document.getElementById('fechaInicio').focus();
 }
 
 // --- TECLAS ---
@@ -218,16 +257,6 @@ document.addEventListener('click', function(e){
 window.addEventListener('load', () => {
     document.getElementById('fechaInicio').focus();
 });
-
-// --- Ajuste después de limpiar ---
-function limpiarTabla(){
-    document.querySelector('#tablaCronograma tbody').innerHTML='';
-    document.getElementById('tablaCronograma').style.display='none';
-    document.getElementById('fechaInicio').value='';
-    document.getElementById('diasFestivos').value='';
-    etapas=[];
-    document.getElementById('fechaInicio').focus(); // vuelve a enfocar automáticamente
-}
 </script>
 </body>
 </html>
