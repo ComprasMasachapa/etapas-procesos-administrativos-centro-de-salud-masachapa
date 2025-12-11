@@ -243,6 +243,13 @@ document.getElementById('fechaInicio').addEventListener('keydown', function(e){
     }
 });
 
+    document.addEventListener('keydown', function(e){
+    if (e.key === 'Delete' || e.key === 'Escape') {
+        limpiarTabla();
+    }
+});
+
+
 // --- COPIAR FECHA AL CLIC ---
 document.addEventListener('click', function(e){
     if(e.target.classList.contains('copiable')){
