@@ -40,6 +40,36 @@
         transition: opacity 0.5s ease-in-out;
         text-align: center;
     }
+
+    .estado-parpadeo {
+        animation: parpadeo 1s infinite;
+        font-weight: bold;
+    }
+
+    @keyframes parpadeo {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.3;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .estado-verde {
+        color: #2e7d32;
+        font-weight: bold;
+    }
+
+    .estado-gris {
+        color: #555;
+        font-style: italic;
+    }
+
 </style>
 </head>
 <body>
@@ -71,6 +101,7 @@
                 <th>INICIA</th>
                 <th>HASTA</th>
                 <th>DÍAS OMITIDOS</th>
+                <th>SEGUIMIENTO DE ETAPAS</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -163,6 +194,33 @@ function sumarDias(fecha, dias, festivos, modo){
     return {fecha:new Date(fecha), omitidos};
 }
 
+// FUNCION DE EVALUAR ESTADO
+    function evaluarEstadoEtapa(inicio, fin) {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        inicio = new Date(inicio);
+        fin = new Date(fin);
+        inicio.setHours(0, 0, 0, 0);
+        fin.setHours(0, 0, 0, 0);
+
+        const diffDias = Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24));
+
+        if (hoy < inicio) {
+            return `<span class="estado-gris">AUN NO INICIA ESTA ETAPA</span>`;
+        }
+
+        if (hoy.getTime() === fin.getTime()) {
+            return `<span class="estado-parpadeo">⚠️ HOY FINALIZA LA ETAPA</span>`;
+        }
+
+        if (hoy > fin) {
+            return `<span class="estado-verde">✔ ETAPA FINALIZADA</span>`;
+        }
+
+        return `<span class="estado-parpadeo">⏳ QUEDAN ${diffDias} DIA(S)</span>`;
+    }
+
 // --- GENERAR CRONOGRAMA ---
 function generarCronograma(){
     let fechaInput=document.getElementById('fechaInicio');
@@ -207,15 +265,23 @@ function generarCronograma(){
     etapas.push({nombre:'CONTRATO A PROVEEDOR', regla:'5 días hábiles', dias:5, fechaInicio:res4.fecha, fechaFin:res5.fecha, omitidos:res5.omitidos});
 
     let tbody = document.querySelector('#tablaCronograma tbody');
-    tbody.innerHTML='';
-    etapas.forEach(etapa=>{
-        let tr=document.createElement('tr');
-        tr.innerHTML=`<td>${etapa.nombre}</td><td>${etapa.regla}</td>
+    tbody.innerHTML = '';
+
+    etapas.forEach(etapa => {
+        let tr = document.createElement('tr');
+
+        tr.innerHTML = `
+        <td>${etapa.nombre}</td>
+        <td>${etapa.regla}</td>
         <td class="copiable">${formatearFecha(etapa.fechaInicio)}</td>
         <td class="copiable">${formatearFecha(etapa.fechaFin)}</td>
-        <td>${etapa.omitidos}</td>`;
+        <td>${etapa.omitidos}</td>
+        <td>${evaluarEstadoEtapa(etapa.fechaInicio, etapa.fechaFin)}</td>
+    `;
+
         tbody.appendChild(tr);
     });
+
     document.getElementById('tablaCronograma').style.display='table';
 }
 
