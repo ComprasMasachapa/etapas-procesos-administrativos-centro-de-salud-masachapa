@@ -70,6 +70,46 @@
         font-style: italic;
     }
 
+    /* --- FULLSCREEN OPTIMIZADO --- */
+
+.fullscreen-activo .container {
+    margin-top: 10px !important;
+    padding: 20px !important;
+    height: 95vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.fullscreen-activo .logo {
+    max-height: 80px;
+}
+
+.fullscreen-activo h1 {
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+.fullscreen-activo .reloj {
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.fullscreen-activo table {
+    flex: 1;
+    margin-top: 10px;
+}
+
+.fullscreen-activo th,
+.fullscreen-activo td {
+    padding: 8px !important;
+    font-size: 0.85em;
+}
+
+.fullscreen-activo .nota,
+.fullscreen-activo .firma {
+    display: none !important;
+}
+
 </style>
 </head>
 <body>
@@ -90,7 +130,7 @@
         <option value="todos">Todos los días</option>
     </select>
 
-    <button onclick="generarCronograma()">Generar Cronograma</button>
+    <button onclick="generarCronograma(); activarPantallaCompleta();">Generar Cronograma</button>
     <button onclick="limpiarTabla()">Limpiar</button>
 
     <table id="tablaCronograma" style="display:none;">
@@ -160,6 +200,10 @@ function formatearFecha(fecha){
     return fecha.getDate().toString().padStart(2,'0') + '/' +
            (fecha.getMonth()+1).toString().padStart(2,'0') + '/' +
            fecha.getFullYear();
+}
+function obtenerNombreDia(fecha){
+    const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sabado'];
+    return dias[fecha.getDay()];
 }
 
 // --- ALERTA FLOTANTE ---
@@ -232,6 +276,17 @@ function generarCronograma(){
         return;
     }
 
+// --- ACTIVAR FULLSCREEN ---
+function activarPantallaCompleta() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+            document.documentElement.classList.add("fullscreen-activo");
+        }).catch(err => {
+            console.log("El navegador bloqueó el fullscreen.");
+        });
+    }
+}
+
     // 🚫 Validar si el día de inicio es fin de semana
     if (fechaInicio.getDay() === 6 || fechaInicio.getDay() === 0) {
         mostrarAlerta('🚫 <b>No puede iniciar un proceso en fin de semana.</b><br>Los procesos administrativos se programan únicamente en días hábiles para garantizar la correcta gestión y seguimiento.');
@@ -267,20 +322,20 @@ function generarCronograma(){
     let tbody = document.querySelector('#tablaCronograma tbody');
     tbody.innerHTML = '';
 
-    etapas.forEach(etapa => {
-        let tr = document.createElement('tr');
+etapas.forEach(etapa => {
+    let tr = document.createElement('tr');
 
-        tr.innerHTML = `
+    tr.innerHTML = `
         <td>${etapa.nombre}</td>
         <td>${etapa.regla}</td>
-        <td class="copiable">${formatearFecha(etapa.fechaInicio)}</td>
-        <td class="copiable">${formatearFecha(etapa.fechaFin)}</td>
+        <td class="copiable" data-fecha="${formatearFecha(etapa.fechaInicio)}">${obtenerNombreDia(etapa.fechaInicio)} ${formatearFecha(etapa.fechaInicio)}</td>
+        <td class="copiable" data-fecha="${formatearFecha(etapa.fechaFin)}">${obtenerNombreDia(etapa.fechaFin)} ${formatearFecha(etapa.fechaFin)}</td>
         <td>${etapa.omitidos}</td>
         <td>${evaluarEstadoEtapa(etapa.fechaInicio, etapa.fechaFin)}</td>
     `;
 
-        tbody.appendChild(tr);
-    });
+    tbody.appendChild(tr);
+});
 
     document.getElementById('tablaCronograma').style.display='table';
 }
@@ -306,20 +361,20 @@ document.getElementById('fechaInicio').addEventListener('keydown', function(e){
     if(e.key === 'Enter'){
         e.preventDefault();
         generarCronograma();
+        activarPantallaCompleta();
     }
 });
 
-    document.addEventListener('keydown', function(e){
+document.addEventListener('keydown', function(e){
     if (e.key === 'Delete' || e.key === 'Escape') {
         limpiarTabla();
     }
 });
 
-
 // --- COPIAR FECHA AL CLIC ---
 document.addEventListener('click', function(e){
     if(e.target.classList.contains('copiable')){
-        const texto = e.target.textContent;
+        const texto = e.target.getAttribute('data-fecha') || e.target.textContent;
         navigator.clipboard.writeText(texto).catch(err=>{
             console.error('Error al copiar: ', err);
         });
@@ -330,6 +385,24 @@ document.addEventListener('click', function(e){
 window.addEventListener('load', () => {
     document.getElementById('fechaInicio').focus();
 });
+
+
+// --- SALIR DE FULLSCREEN CON ESCAPE ---
+document.addEventListener("fullscreenchange", function () {
+    if (!document.fullscreenElement) {
+        document.documentElement.classList.remove("fullscreen-activo");
+    }
+});
+
+document.addEventListener('keydown', function(e){
+    if (e.code === "Space") {
+        e.preventDefault();
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        }
+    }
+});
+
 </script>
 </body>
 </html>
