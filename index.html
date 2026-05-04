@@ -324,17 +324,52 @@ function activarPantallaCompleta() {
     let tbody = document.querySelector('#tablaCronograma tbody');
     tbody.innerHTML = '';
 
-etapas.forEach(etapa => {
+etapas.forEach((etapa, i) => {
+
     let tr = document.createElement('tr');
 
-    tr.innerHTML = `
-        <td>${etapa.nombre}</td>
-        <td>${etapa.regla}</td>
-        <td class="copiable" data-fecha="${formatearFecha(etapa.fechaInicio)}">${obtenerNombreDia(etapa.fechaInicio)} ${formatearFecha(etapa.fechaInicio)}</td>
-        <td class="copiable" data-fecha="${formatearFecha(etapa.fechaFin)}">${obtenerNombreDia(etapa.fechaFin)} ${formatearFecha(etapa.fechaFin)}</td>
-        <td>${etapa.omitidos}</td>
-        <td>${evaluarEstadoEtapa(etapa.fechaInicio, etapa.fechaFin)}</td>
-    `;
+    // 🔹 PRIMERA FILA (evento)
+    if (i === 0) {
+
+        tr.innerHTML = `
+            <td>${etapa.nombre}</td>
+            <td>${etapa.regla}</td>
+            <td colspan="2" class="copiable" data-fecha="${formatearFecha(etapa.fechaInicio)}">
+                ${obtenerNombreDia(etapa.fechaInicio)} ${formatearFecha(etapa.fechaInicio)}
+            </td>
+            <td>${etapa.omitidos}</td>
+            <td><span class="estado-parpadeo">DÍA DE INICIO DEL PROCESO</span></td>
+        `;
+
+    // 🔹 ADJUDICACIÓN (mostrar SOLO fecha final)
+    } else if (etapa.nombre.includes('ADJUDICACIÓN')) {
+
+        tr.innerHTML = `
+            <td>${etapa.nombre}</td>
+            <td>${etapa.regla}</td>
+            <td colspan="2" class="copiable" data-fecha="${formatearFecha(etapa.fechaFin)}">
+                ${obtenerNombreDia(etapa.fechaFin)} ${formatearFecha(etapa.fechaFin)}
+            </td>
+            <td>${etapa.omitidos}</td>
+            <td>${evaluarEstadoEtapa(etapa.fechaInicio, etapa.fechaFin)}</td>
+        `;
+
+    // 🔹 RESTO NORMAL
+    } else {
+
+        tr.innerHTML = `
+            <td>${etapa.nombre}</td>
+            <td>${etapa.regla}</td>
+            <td class="copiable" data-fecha="${formatearFecha(etapa.fechaInicio)}">
+                ${obtenerNombreDia(etapa.fechaInicio)} ${formatearFecha(etapa.fechaInicio)}
+            </td>
+            <td class="copiable" data-fecha="${formatearFecha(etapa.fechaFin)}">
+                ${obtenerNombreDia(etapa.fechaFin)} ${formatearFecha(etapa.fechaFin)}
+            </td>
+            <td>${etapa.omitidos}</td>
+            <td>${evaluarEstadoEtapa(etapa.fechaInicio, etapa.fechaFin)}</td>
+        `;
+    }
 
     tbody.appendChild(tr);
 });
